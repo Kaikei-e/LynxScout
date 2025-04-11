@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  lynx_web:
+    build:
+      context: ./lynx_web
+      dockerfile: Dockerfile
+    container_name: lynx_web
+    restart: unless-stopped
+    ports:
+      - "80808:8080"
+    environment:
+      - ENV_VAR_NAME=value
+    volumes:
+      - ./data:/data
+    networks:
+      - lynx_net
+  app:
+    build:
+      context: ./feed_collector
+      dockerfile: Dockerfile
+    container_name: feed_collector
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      - ENV_VAR_NAME=value
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - lynx_net
+  db:
+    image: postgres:17.4-bookworm
+    container_name: feed_collector_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - lynx_net
+
+networks:
+  lynx_n:
+    driver: bridge
+volumes:
+  db_data:
+    driver: local
