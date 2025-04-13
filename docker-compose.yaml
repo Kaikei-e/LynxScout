@@ -50,7 +50,7 @@ services:
       - lynx_net
 
 networks:
-  lynx_n:
+  lynx_net:
     driver: bridge
 volumes:
   db_data:
